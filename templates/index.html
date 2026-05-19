@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM | Worker Station</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; min-height: 100vh; }
+
+  header {
+    background: #1a1a2e; color: white; padding: 14px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo { font-size: 16px; font-weight: bold; letter-spacing: 1px; }
+  .stats { font-size: 13px; color: #aaa; display: flex; gap: 20px; }
+  .stats span b { color: white; }
+  .logout { background: none; border: 1px solid #444; color: #aaa;
+    padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .logout:hover { border-color: #e74c3c; color: #e74c3c; }
+
+  main { display: flex; justify-content: center; align-items: center;
+    min-height: calc(100vh - 56px); padding: 30px 16px; }
+
+  .card {
+    background: white; border-radius: 12px; width: 100%; max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden;
+  }
+  .card-header {
+    background: #1a1a2e; color: white; padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-header span { font-size: 12px; color: #aaa; }
+  .badge { background: #27ae60; color: white; font-size: 11px;
+    padding: 3px 10px; border-radius: 20px; }
+
+  .card-body { padding: 24px; }
+  .business-name { font-size: 22px; font-weight: 900; margin-bottom: 4px; color: #1a1a2e; }
+  .category { font-size: 12px; color: #27ae60; margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 1px; }
+
+  .description {
+    background: #f8f9fa; border-left: 3px solid #27ae60;
+    border-radius: 0 6px 6px 0; padding: 12px 14px;
+    font-size: 13px; color: #444; line-height: 1.6;
+    margin-bottom: 16px; white-space: pre-line;
+  }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .info-item { background: #f8f9fa; border-radius: 8px; padding: 12px; }
+  .info-item.full { grid-column: 1 / -1; }
+  .info-label { font-size: 10px; color: #999; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 4px; }
+  .info-value { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+  .stars { color: #f39c12; }
+
+  .phone-box {
+    background: #f0fff4; border: 1px solid #27ae60; border-radius: 8px;
+    padding: 14px 18px; display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 24px;
+  }
+  .phone-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+  .phone-number { font-size: 22px; font-weight: 700; color: #1a1a2e; direction: ltr; }
+  .call-btn {
+    background: #27ae60; color: white; border: none; border-radius: 6px;
+    padding: 10px 18px; font-size: 14px; cursor: pointer;
+    text-decoration: none; display: inline-block; transition: background .2s;
+  }
+  .call-btn:hover { background: #219a52; }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .action-btn {
+    padding: 14px; border: 2px solid #eee; border-radius: 8px;
+    background: white; cursor: pointer; font-size: 13px; font-weight: 700;
+    transition: all .18s; display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+  }
+  .action-btn .icon { font-size: 22px; }
+  .action-btn:hover { transform: translateY(-2px); }
+  .action-btn.no:hover    { border-color: #e74c3c; color: #e74c3c; background: #fff5f5; }
+  .action-btn.maybe:hover { border-color: #f39c12; color: #f39c12; background: #fffbf0; }
+  .action-btn.yes:hover   { border-color: #27ae60; color: #27ae60; background: #f0fff4; }
+
+  .empty { text-align: center; padding: 60px 24px; }
+  .empty .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty h2 { font-size: 20px; margin-bottom: 8px; color: #1a1a2e; }
+  .empty p  { color: #999; font-size: 14px; }
+
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); align-items: center;
+    justify-content: center; z-index: 100;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 12px; padding: 36px;
+    width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal .icon { font-size: 40px; margin-bottom: 12px; }
+  .modal h2 { font-size: 22px; font-weight: 900; margin-bottom: 6px; color: #1a1a2e; }
+  .modal p  { font-size: 13px; color: #999; margin-bottom: 20px; }
+  .modal input {
+    width: 100%; border: 2px solid #eee; border-radius: 6px;
+    padding: 12px 14px; font-size: 14px; outline: none;
+    margin-bottom: 8px; direction: ltr; transition: border-color .2s;
+  }
+  .modal input:focus { border-color: #27ae60; }
+  .email-error { color: #e74c3c; font-size: 12px; margin-bottom: 14px; display: none; }
+  .modal-btns { display: flex; gap: 10px; }
+  .btn-confirm {
+    flex: 1; padding: 13px; background: #27ae60; color: white;
+    border: none; border-radius: 6px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background .2s;
+  }
+  .btn-confirm:hover { background: #219a52; }
+  .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-cancel {
+    padding: 13px 18px; background: none; border: 2px solid #eee;
+    border-radius: 6px; font-size: 14px; cursor: pointer; transition: all .2s;
+  }
+  .btn-cancel:hover { border-color: #e74c3c; color: #e74c3c; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a2e; color: white; padding: 12px 24px;
+    border-radius: 8px; font-size: 13px; transition: transform .3s; z-index: 200;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #27ae60; }
+  .toast.error   { background: #e74c3c; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CRM WORKER STATION</div>
+  <div class="stats">
+    <span>Queue: <b id="stat-raw">—</b></span>
+    <span>Closed: <b id="stat-closed">—</b></span>
+    <span>Follow-up: <b id="stat-follow">—</b></span>
+    <span>Blacklist: <b id="stat-black">—</b></span>
+  </div>
+  <button class="logout" onclick="location.href='/logout'">Logout</button>
+</header>
+
+<main>
+  <div id="container"></div>
+</main>
+
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="icon">🎉</div>
+    <h2>Deal Closed!</h2>
+    <p>Enter the customer's email address to complete the process.</p>
+    <input type="email" id="email-input" placeholder="customer@example.com"
+           onkeydown="if(event.key==='Enter') confirmYes()">
+    <div class="email-error" id="email-error">Please enter a valid email address.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="confirm-btn" onclick="confirmYes()">Send & Continue ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentLeadId = null;
+
+async function fetchNextLead() {
+  document.getElementById('container').innerHTML = '';
+  try {
+    const res  = await fetch('/api/leads/next');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    if (!data.lead) { renderEmpty(); return; }
+    currentLeadId = data.lead.id;
+    renderLead(data.lead);
+    fetchStats();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function renderLead(lead) {
+  const rating = lead.rating ? lead.rating.toFixed(1) : '—';
+  const stars  = lead.rating
+    ? '★'.repeat(Math.round(lead.rating)) + '☆'.repeat(5 - Math.round(lead.rating))
+    : '—';
+  const tel = 'tel:' + (lead.phone || '').replace(/\s/g, '');
+  const descHtml = lead.description
+    ? `<div class="description">${esc(lead.description)}</div>`
+    : '';
+
+  document.getElementById('container').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span>#${lead.id.slice(0,8).toUpperCase()}</span>
+        <span class="badge">New Lead</span>
+      </div>
+      <div class="card-body">
+        <div class="business-name">${esc(lead.business_name)}</div>
+        <div class="category">${esc(lead.category || 'Unknown')}</div>
+        ${descHtml}
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Rating</div>
+            <div class="info-value"><span class="stars">${stars}</span> ${rating}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Reviews</div>
+            <div class="info-value">${lead.review_count ?? '—'}</div>
+          </div>
+          <div class="info-item full">
+            <div class="info-label">Address</div>
+            <div class="info-value">${esc(lead.address || '—')}</div>
+          </div>
+        </div>
+        <div class="phone-box">
+          <div>
+            <div class="phone-label">Phone</div>
+            <div class="phone-number">${esc(lead.phone)}</div>
+          </div>
+          <a class="call-btn" href="${tel}">📞 Call</a>
+        </div>
+        <div class="actions">
+          <button class="action-btn no"    onclick="postStatus('no')">
+            <span class="icon">❌</span>No
+          </button>
+          <button class="action-btn maybe" onclick="postStatus('maybe')">
+            <span class="icon">🔄</span>Maybe
+          </button>
+          <button class="action-btn yes"   onclick="openModal()">
+            <span class="icon">✅</span>Yes
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderEmpty() {
+  document.getElementById('container').innerHTML = `
+    <div class="card">
+      <div class="empty">
+        <div class="icon">📭</div>
+        <h2>No leads available</h2>
+        <p>All leads have been assigned. Check back later.</p>
+      </div>
+    </div>`;
+}
+
+async function postStatus(action, extra = {}) {
+  if (!currentLeadId) return;
+  try {
+    const res  = await fetch('/api/leads/' + currentLeadId + '/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...extra }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    const labels = { yes: 'Deal closed ✅', maybe: 'Moved to follow-up 🔄', no: 'Blacklisted ❌' };
+    showToast(labels[action], action === 'no' ? 'error' : 'success');
+    setTimeout(fetchNextLead, 700);
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function openModal() {
+  document.getElementById('email-input').value = '';
+  document.getElementById('email-error').style.display = 'none';
+  document.getElementById('confirm-btn').disabled = false;
+  document.getElementById('confirm-btn').textContent = 'Send & Continue ✓';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('email-input').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function confirmYes() {
+  const email = document.getElementById('email-input').value.trim();
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    document.getElementById('email-error').style.display = 'block';
+    return;
+  }
+  document.getElementById('email-error').style.display = 'none';
+  document.getElementById('confirm-btn').disabled = true;
+  document.getElementById('confirm-btn').textContent = 'Sending...';
+  closeModal();
+  await postStatus('yes', { customer_email: email });
+}
+
+async function fetchStats() {
+  try {
+    const res  = await fetch('/api/stats');
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('stat-raw').textContent    = data.counts.raw;
+      document.getElementById('stat-closed').textContent = data.counts.closed;
+      document.getElementById('stat-follow').textContent = data.counts.follow_up;
+      document.getElementById('stat-black').textContent  = data.counts.blacklist;
+    }
+  } catch (_) {}
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+fetchNextLead();
+</script>
+</body>
+</html>

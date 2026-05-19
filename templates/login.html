@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM | Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: white; border-radius: 12px; padding: 48px 40px;
+    width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .logo { font-size: 13px; font-weight: bold; color: #27ae60;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 28px; }
+  h1 { font-size: 26px; font-weight: 900; margin-bottom: 6px; color: #1a1a2e; }
+  p  { font-size: 13px; color: #999; margin-bottom: 28px; }
+  label { display: block; font-size: 11px; color: #999; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 6px; }
+  input { width: 100%; border: 2px solid #eee; border-radius: 6px;
+    padding: 12px 14px; font-size: 14px; outline: none;
+    margin-bottom: 18px; transition: border-color .2s; }
+  input:focus { border-color: #27ae60; }
+  button { width: 100%; padding: 14px; background: #27ae60; color: white;
+    border: none; border-radius: 6px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background .2s; }
+  button:hover { background: #219a52; }
+  .error { color: #e74c3c; font-size: 12px; margin-top: 12px; display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">CRM SYSTEM</div>
+  <h1>Worker Login</h1>
+  <p>Enter your credentials to access your station.</p>
+  <label>Username</label>
+  <input type="text" id="username" placeholder="username">
+  <label>Password</label>
+  <input type="password" id="password" placeholder="••••••••"
+         onkeydown="if(event.key==='Enter') login()">
+  <button onclick="login()">Login →</button>
+  <div class="error" id="err">Invalid username or password.</div>
+</div>
+<script>
+async function login() {
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: document.getElementById('username').value.trim(),
+      password: document.getElementById('password').value
+    })
+  });
+  const data = await res.json();
+  if (data.ok) location.href = data.redirect;
+  else document.getElementById('err').style.display = 'block';
+}
+</script>
+</body>
+</html>
