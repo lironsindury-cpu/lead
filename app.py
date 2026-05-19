@@ -10,8 +10,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-with app.app_context():
-    db.create_all()
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///crm.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
