@@ -9,12 +9,15 @@ from flask import Flask, jsonify, request, render_template, session, redirect, u
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///crm.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+with app.app_context():
+    pass
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -55,6 +58,9 @@ class Worker(db.Model):
     username  = db.Column(db.String(100), unique=True, nullable=False)
     password  = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+
+with app.app_context():
+    db.create_all()
 
 def login_required(f):
     @wraps(f)
@@ -142,18 +148,14 @@ def update_status(lead_id):
 
 def send_make_webhook(lead, customer_email, worker_username):
     if not MAKE_WEBHOOK_URL:
-        logger.warning("MAKE_WEBHOOK_URL not set — skipping webhook")
         return True
     payload = {
         "event":          "deal_closed",
-        "lead_id":        lead.id,
         "business_name":  lead.business_name,
         "category":       lead.category,
         "address":        lead.address,
         "phone":          lead.phone,
         "rating":         lead.rating,
-        "review_count":   lead.review_count,
-        "description":    lead.description,
         "customer_email": customer_email,
         "closed_by":      worker_username,
         "closed_at":      datetime.utcnow().isoformat(),
@@ -214,6 +216,4 @@ def create_worker():
     return jsonify({"ok": True}), 201
 
 if __name__ == "__main__":
-    with app.app_context():
-        logger.info("Database ready.")
     app.run(host="0.0.0.0", port=5000, debug=True)
