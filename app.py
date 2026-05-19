@@ -106,7 +106,7 @@ def next_lead():
             Lead.query
             .filter_by(status="raw", assigned_to=None)
             .order_by(Lead.created_at.asc())
-            .with_for_update(skip_locked=True)
+            
             .first()
         )
         if not lead:
