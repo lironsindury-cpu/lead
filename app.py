@@ -1,4 +1,4 @@
-import os, logging, uuid, requests
+import os, logging, uuid, requests, urllib.parse
 from datetime import datetime
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, session, redirect, url_for
@@ -11,7 +11,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-MAKE_WEBHOOK_URL = os.environ.get("MAKE_WEBHOOK_URL")
+
+WHATSAPP_PHONE = os.environ.get("WHATSAPP_PHONE", "+972500000000")
+WHATSAPP_APIKEY = os.environ.get("CALLMEBOT_APIKEY", "YOUR_CALLMEBOT_API_KEY")
 
 class Lead(db.Model):
     __tablename__ = "leads"
@@ -40,6 +42,16 @@ class Worker(db.Model):
 
 with app.app_context():
     db.create_all()
+
+def send_whatsapp_alert(business_name, phone_number, email):
+    message = f"New Lead Closed! Business: {business_name} Phone: {phone_number} Email: {email}"
+    encoded_message = urllib.parse.quote(message)
+    url = f"https://api.callmebot.com/whatsapp.php?phone={WHATSAPP_PHONE}&text={encoded_message}&apikey={WHATSAPP_APIKEY}"
+    try:
+        requests.get(url, timeout=5)
+        logger.info(f"WhatsApp alert sent for {business_name}")
+    except Exception as e:
+        logger.error(f"Failed to send WhatsApp alert: {e}")
 
 def login_required(f):
     @wraps(f)
@@ -110,6 +122,7 @@ def update_status(lead_id):
             return jsonify({"ok": False, "error": "Invalid email"}), 400
         lead.status = "closed"
         lead.customer_email = email
+        send_whatsapp_alert(lead.business_name, lead.phone, email)
     lead.updated_at = datetime.utcnow()
     db.session.commit()
     return jsonify({"ok": True}), 200
